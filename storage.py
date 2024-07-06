@@ -40,7 +40,7 @@ class Shops:
         with Session(engine) as session:
             data = []
             for s in session.scalars(select(orm.Shop)).all():
-                data.append({'id' : s.id, 'name' : s.name})
+                data.append({'url' : f'/shops/{s.id}', 'name' : s.name})
             return RETURN.ok(data)
 
     def get(id):
@@ -48,7 +48,7 @@ class Shops:
             s = session.scalars(select(orm.Shop).where(orm.Shop.id == id)).one_or_none()
             if s is None:
                 return RETURN.not_found("Shop not found")
-            data = {'id' : s.id, 'name' : s.name}
+            data = {'url' : f'/shops/{s.id}', 'name' : s.name}
             return RETURN.ok(data)
 
     def create(input):
@@ -58,7 +58,7 @@ class Shops:
             s = orm.Shop(name=input['name'])
             session.add(s)
             session.commit()
-            return RETURN.created({'id' : s.id, 'name' : s.name})
+            return RETURN.created({'url' : f'/shops/{s.id}', 'name' : s.name})
 
     def update(id, input):
         with Session(engine) as session:
@@ -68,7 +68,7 @@ class Shops:
             if 'name' in input:
                 s.name = input['name']
             session.commit()
-            return RETURN.ok({'id' : s.id, 'name' : s.name})
+            return RETURN.ok({'url' : f'/shops/{s.id}', 'name' : s.name})
 
     def delete(id):
         with Session(engine) as session:
@@ -86,7 +86,7 @@ class Products:
         with Session(engine) as session:
             data = []
             for p in session.scalars(select(orm.Product)).all():
-                data.append({'id' : p.id, 'name' : p.name, 'unit' : p.unit})
+                data.append({'url' : f'/products/{p.id}', 'name' : p.name, 'unit' : p.unit})
             return RETURN.ok(data)
 
     @staticmethod
@@ -95,7 +95,7 @@ class Products:
             p = session.scalars(select(orm.Product).where(orm.Product.id == id)).one_or_none()
             if p is None:
                 return RETURN.not_found("Product not found")
-            data = {'id' : p.id, 'name' : p.name, 'unit' : p.unit}
+            data = {'url' : f'/products/{p.id}', 'name' : p.name, 'unit' : p.unit}
             return RETURN.ok(data)
 
     @staticmethod
@@ -108,7 +108,7 @@ class Products:
             p = orm.Product(name=input['name'], unit=input['unit'])
             session.add(p)
             session.commit()
-            return RETURN.created({'id' : p.id, 'name' : p.name, 'unit' : p.unit})
+            return RETURN.created({'url' : f'/products/{p.id}', 'name' : p.name, 'unit' : p.unit})
 
     @staticmethod
     def update(id, input):
@@ -121,7 +121,7 @@ class Products:
             if 'unit' in input:
                 p.unit = input['unit']
             session.commit()
-            return RETURN.ok({'id' : p.id, 'name' : p.name, 'unit' : p.unit})
+            return RETURN.ok({'url' : f'/products/{p.id}', 'name' : p.name, 'unit' : p.unit})
 
     @staticmethod
     def delete(id):
@@ -139,7 +139,7 @@ class Brands:
         with Session(engine) as session:
             data = []
             for b in session.scalars(select(orm.BrandedProduct).where(orm.BrandedProduct.product_id == product_id)).all():
-                data.append({'id' : b.id, 'product_id' : b.product_id, 'name' : b.name})
+                data.append({'product_url' : f'/products/{b.product_id}', 'url' : f'/products/{b.product_id}/brands/{b.id}', 'name' : b.name})
             return RETURN.ok(data)
 
     @staticmethod
@@ -148,7 +148,7 @@ class Brands:
             b = session.scalars(select(orm.BrandedProduct).where(orm.BrandedProduct.product_id == product_id).where(orm.BrandedProduct.id == id)).one_or_none()
             if b is None:
                 return RETURN.not_found("Brand not found")
-            data = {'id' : b.id, 'product_id' : b.product_id, 'name' : b.name}
+            data = {'product_url' : f'/products/{b.product_id}', 'url' : f'/products/{b.product_id}/brands/{b.id}', 'name' : b.name}
             return RETURN.ok(data)
 
     @staticmethod
@@ -159,7 +159,7 @@ class Brands:
             b = orm.BrandedProduct(product_id=product_id, name=input['name'])
             session.add(b)
             session.commit()
-            return RETURN.created({'id' : b.id, 'product_id' : b.product_id, 'name' : b.name})
+            return RETURN.created({'product_url' : f'/products/{b.product_id}', 'url' : f'/products/{b.product_id}/brands/{b.id}', 'name' : b.name})
 
     @staticmethod
     def update(product_id, id, input):
@@ -170,7 +170,7 @@ class Brands:
             if 'name' in input:
                 b.name = input['name']
             session.commit()
-            return RETURN.ok({'id' : b.id, 'product_id' : b.product_id, 'name' : b.name})
+            return RETURN.ok({'product_url' : f'/products/{b.product_id}', 'url' : f'/products/{b.product_id}/brands/{b.id}', 'name' : b.name})
 
     @staticmethod
     def delete(product_id, id):
@@ -188,7 +188,7 @@ class Storages:
         with Session(engine) as session:
             data = []
             for s in session.scalars(select(orm.Storage)).all():
-                data.append({'id' : s.id, 'name' : s.name})
+                data.append({'url' : f'/storages/{s.id}', 'name' : s.name})
             return RETURN.ok(data)
 
     @staticmethod
@@ -197,7 +197,7 @@ class Storages:
             s = session.scalars(select(orm.Storage).where(orm.Storage.id == id)).one_or_none()
             if s is None:
                 return RETURN.not_found("Storage not found")
-            data = {'id' : s.id, 'name' : s.name}
+            data = {'url' : f'/storages/{s.id}', 'name' : s.name}
             return RETURN.ok(data)
 
     @staticmethod
@@ -208,7 +208,7 @@ class Storages:
             s = orm.Storage(name=input['name'])
             session.add(s)
             session.commit()
-            return RETURN.created({'id' : s.id, 'name' : s.name})
+            return RETURN.created({'url' : f'/storages/{s.id}', 'name' : s.name})
 
     @staticmethod
     def update(id, input):
@@ -219,7 +219,7 @@ class Storages:
             if 'name' in input:
                 s.name = input['name']
             session.commit()
-            return RETURN.ok({'id' : s.id, 'name' : s.name})
+            return RETURN.ok({'url' : f'/storages/{s.id}', 'name' : s.name})
 
     @staticmethod
     def delete(id):
@@ -237,7 +237,7 @@ class StorageEntries:
         with Session(engine) as session:
             data = []
             for e in session.scalars(select(orm.StorageEntry).where(orm.StorageEntry.storage_id == storage_id)).all():
-                data.append({'id' : e.id, 'storage_id' : e.storage_id, 'product_id' : e.product_id, 'amount' : e.amount})
+                data.append({'url' : f'/storages/{e.storage_id}/entries/{e.id}', 'storage_url' : f'/storages/{e.storage_id}', 'product_url' : f'/products/{e.product_id}', 'amount' : e.amount})
             return RETURN.ok(data)
 
     @staticmethod
@@ -246,7 +246,7 @@ class StorageEntries:
             e = session.scalars(select(orm.StorageEntry).where(orm.StorageEntry.storage_id == storage_id).where(orm.StorageEntry.id == id)).one_or_none()
             if e is None:
                 return RETURN.not_found("Entry not found")
-            data = {'id' : e.id, 'storage_id' : e.storage_id, 'product_id' : e.product_id, 'amount' : e.amount}
+            data = {'url' : f'/storages/{e.storage_id}/entries/{e.id}', 'storage_url' : f'/storages/{e.storage_id}', 'product_url' : f'/products/{e.product_id}', 'amount' : e.amount}
             return RETURN.ok(data)
 
     @staticmethod
@@ -259,7 +259,7 @@ class StorageEntries:
             e = orm.StorageEntry(storage_id=storage_id, product_id=input['product_id'], amount=input['amount'])
             session.add(e)
             session.commit()
-            return RETURN.created({'id' : e.id, 'storage_id' : e.storage_id, 'product_id' : e.product_id, 'amount' : e.amount})
+            return RETURN.created({'url' : f'/storages/{e.storage_id}/entries/{e.id}', 'storage_url' : f'/storages/{e.storage_id}', 'product_url' : f'/products/{e.product_id}', 'amount' : e.amount})
 
     @staticmethod
     def update(storage_id, id, input):
@@ -272,7 +272,7 @@ class StorageEntries:
             if 'amount' in input:
                 e.amount = input['amount']
             session.commit()
-            return RETURN.ok({'id' : e.id, 'storage_id' : e.storage_id, 'product_id' : e.product_id, 'amount' : e.amount})
+            return RETURN.ok({'url' : f'/storages/{e.storage_id}/entries/{e.id}', 'storage_url' : f'/storages/{e.storage_id}', 'product_url' : f'/products/{e.product_id}', 'amount' : e.amount})
 
     @staticmethod
     def delete(storage_id, id):
@@ -290,7 +290,7 @@ class ShoppingLists:
         with Session(engine) as session:
             data = []
             for l in session.scalars(select(orm.ShoppingList)).all():
-                data.append({'id' : l.id, 'name' : l.name})
+                data.append({'url' : f'/lists/{l.id}', 'name' : l.name})
             return RETURN.ok(data)
 
     @staticmethod
@@ -299,7 +299,7 @@ class ShoppingLists:
             l = session.scalars(select(orm.ShoppingList).where(orm.ShoppingList.id == id)).one_or_none()
             if l is None:
                 return RETURN.not_found("ShoppingList not found")
-            data = {'id' : l.id, 'name' : l.name}
+            data = {'url' : f'/lists/{l.id}', 'name' : l.name}
             return RETURN.ok(data)
 
     @staticmethod
@@ -310,7 +310,7 @@ class ShoppingLists:
             l = orm.ShoppingList(name=input['name'])
             session.add(l)
             session.commit()
-            return RETURN.created({'id' : l.id, 'name' : l.name})
+            return RETURN.created(data = {'url' : f'/lists/{l.id}', 'name' : l.name})
 
     @staticmethod
     def update(id, input):
@@ -321,7 +321,7 @@ class ShoppingLists:
             if 'name' in input:
                 l.name = input['name']
             session.commit()
-            return RETURN.ok({'id' : l.id, 'name' : l.name})
+            return RETURN.ok(data = {'url' : f'/lists/{l.id}', 'name' : l.name})
 
     @staticmethod
     def delete(id):
@@ -339,7 +339,7 @@ class ShoppingEntries:
         with Session(engine) as session:
             data = []
             for e in session.scalars(select(orm.ShoppingEntry)).all():
-                data.append({'id' : e.id, 'shopping_list_id' : e.shopping_list_id, 'product_id' : e.product_id, 'amount' : e.amount})
+                data.append({'url' : f'/lists/{e.shopping_list_id}/entries/{e.id}', 'shopping_list_url' : f'/lists/{e.shopping_list_id}', 'product_url' : f'/products/{e.product_id}', 'amount' : e.amount})
             return RETURN.ok(data)
 
     @staticmethod
@@ -348,7 +348,7 @@ class ShoppingEntries:
             e = session.scalars(select(orm.ShoppingEntry).where(orm.ShoppingEntry.shopping_list_id == shopping_list_id).where(orm.ShoppingEntry.id == id)).one_or_none()
             if e is None:
                 return RETURN.not_found("Entry not found")
-            data = {'id' : e.id, 'shopping_list_id' : e.shopping_list_id, 'product_id' : e.product_id, 'amount' : e.amount}
+            data = {'url' : f'/lists/{e.shopping_list_id}/entries/{e.id}', 'shopping_list_url': f'/lists/{e.shopping_list_id}', 'product_url' : f'/products/{e.product_id}', 'amount' : e.amount}
             return RETURN.ok(data)
 
     @staticmethod
@@ -361,7 +361,7 @@ class ShoppingEntries:
             e = orm.ShoppingEntry(shopping_list_id=shopping_list_id, product_id=input['product_id'], amount=input['amount'])
             session.add(e)
             session.commit()
-            return RETURN.created({'id' : e.id, 'shopping_list_id' : e.shopping_list_id, 'product_id' : e.product_id, 'amount' : e.amount})
+            return RETURN.created({'url' : f'/lists/{e.shopping_list_id}/entries/{e.id}', 'shopping_list_url': f'/lists/{e.shopping_list_id}', 'product_url' : f'/products/{e.product_id}', 'amount' : e.amount})
 
     @staticmethod
     def update(shopping_list_id, id, input):
@@ -374,7 +374,7 @@ class ShoppingEntries:
             if 'amount' in input:
                 e.amount = input['amount']
             session.commit()
-            return RETURN.ok({'id' : e.id, 'shopping_list_id' : e.shopping_list_id, 'product_id' : e.product_id, 'amount' : e.amount})
+            return RETURN.ok({'url' : f'/lists/{e.shopping_list_id}/entries/{e.id}', 'shopping_list_url': f'/lists/{e.shopping_list_id}', 'product_url' : f'/products/{e.product_id}', 'amount' : e.amount})
 
     @staticmethod
     def delete(shopping_list_id, id):
