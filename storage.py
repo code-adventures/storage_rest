@@ -93,6 +93,15 @@ class Products:
         return {'url' : f'/products/{obj.id}', 'name' : obj.name, 'unit' : obj.unit}
 
     @staticmethod
+    def get_by_url(url, session):
+        elements = url.split("/")
+        if len(elements) != 3 or elements[0] != "" or elements[1] != "products":
+            print (f'we could not parse the url: {url}, elements: {elements}')
+            return None
+        print (f'we try to find product with id {elements[2]}')
+        return session.scalars(select(orm.Product).where(orm.Product.id == elements[2])).one_or_none()
+        
+    @staticmethod
     def all():
         with Session(engine) as session:
             data = []
@@ -201,6 +210,13 @@ class Storages:
         return {'url' : f'/storages/{obj.id}', 'name' : obj.name}
 
     @staticmethod
+    def get_by_url(url, session):
+        elements = url.split("/")
+        if len(elements) != 3 or elements[0] != "" or elements[1] != "storages":
+            return None
+        return session.scalars(select(orm.Storage).where(orm.Storage.id == elements[2])).one_or_none()
+
+    @staticmethod
     def all():
         with Session(engine) as session:
             data = []
@@ -250,7 +266,7 @@ class Storages:
 class StorageEntries:
     @staticmethod
     def object_to_dict(obj):
-        return {'url' : f'/storages/{obj.storage_id}/entries/{obj.id}', 'storage_url' : f'/storages/{obj.storage_id}', 'product_url' : f'/products/{obj.product_id}', 'amount' : obj.amount}    
+        return {'url' : f'/storages/{obj.storage_id}/entries/{obj.id}', 'storage_url' : f'/storages/{obj.storage_id}', 'product_url' : f'/products/{obj.product_id}', 'quantity' : obj.quantity}    
 
     @staticmethod
     def all(storage_id):
@@ -270,12 +286,18 @@ class StorageEntries:
 
     @staticmethod
     def create(storage_id, input):
-        if 'product_id' not in input:
-            return RETURN.bad_request("Missing product_id")
-        if 'amount' not in input:
-            return RETURN.bad_request("Missing amount")
+        if 'product_url' not in input:
+            return RETURN.bad_request("Missing product_url")
+        if 'quantity' not in input:
+            return RETURN.bad_request("Missing quantity")
         with Session(engine) as session:
-            e = orm.StorageEntry(storage_id=storage_id, product_id=input['product_id'], amount=input['amount'])
+            p = Products.get_by_url(input['product_url'], session)
+            if p is None:
+                return RETURN.not_found("Product not found")
+            s = session.scalars(select(orm.Storage).where(orm.Storage.id == storage_id)).one_or_none()
+            if s is None:
+                return RETURN.not_found("Storage not found")
+            e = orm.StorageEntry(storage_id=s.id, product_id=p.id], quantity=input['quantity'])
             session.add(e)
             session.commit()
             return RETURN.created(StorageEntries.object_to_dict(e))
@@ -288,8 +310,8 @@ class StorageEntries:
                 return RETURN.not_found("Entry not found")
             if 'product_id' in input:
                 e.product_id = input['product_id']
-            if 'amount' in input:
-                e.amount = input['amount']
+            if 'quantity' in input:
+                e.quantity = input['quantity']
             session.commit()
             return RETURN.ok(StorageEntries.object_to_dict(e))
 
@@ -303,10 +325,53 @@ class StorageEntries:
             session.commit()
             return RETURN.no_content()
 
+    @staticmethod
+    def move(shopping_list_id, id, input):
+        if 'target_url' not in input:
+            return RETURN.bad_request("Missing target_url")
+
+        with Session(engine) as session:
+            src = session.scalars(select(orm.StorageEntry).where(orm.StorageEntry.shopping_list_id == shopping_list_id).where(orm.StorageEntry.id == id)).one_or_none()
+            if src is None:
+                return RETURN.not_found("Entry not found")
+
+            target_url = input['target_url']
+            elements = target_url.split('/')
+            if elements[1] == 'lists':
+                l = ShoppingLists.get_by_url(target_url, session)
+                if l is None:
+                    return RETURN.not_found("ShoppingList not found")
+
+                e = orm.ShoppingEntry(shopping_list_id=elements[1], product_id=src.product_id, quantity=src.quantity, replacement=True)
+                session.add(e)
+                session.delete(src)
+                session.commit()
+                return RETURN.created(ShoppingEntries.object_to_dict(e))
+
+            if elements[0] == 'storages':
+                s = Storages.get_by_url(target_url, session)
+                if s is None:
+                    return RETURN.not_found("Storage not found")
+
+                e = orm.StorageEntry(storage_id=elements[1], product_id=src.product_id, quantity=src.quantity)
+                session.add(e)
+                session.delete(src)
+                session.commit()
+                return RETURN.created(StorageEntries.object_to_dict(e))
+
+            return RETURN.bad_request("No valid target_url")
+
 class ShoppingLists:
     @staticmethod
     def object_to_dict(obj):
         return {'url' : f'/lists/{obj.id}', 'name' : obj.name}
+
+    @staticmethod
+    def get_by_url(url, session):
+        elements = url.split("/")
+        if len(elements) != 3 or elements[0] != "" or elements[1] != "lists":
+            return None
+        return session.scalars(select(orm.ShoppingList).where(orm.ShoppingList.id == elements[2])).one_or_none()
 
     @staticmethod
     def all():
@@ -358,13 +423,13 @@ class ShoppingLists:
 class ShoppingEntries:
     @staticmethod
     def object_to_dict(obj):
-        return {'url' : f'/lists/{obj.shopping_list_id}/entries/{obj.id}', 'shopping_list_url' : f'/lists/{obj.shopping_list_id}', 'product_url' : f'/products/{obj.product_id}', 'amount' : obj.amount}
+        return {'url' : f'/lists/{obj.shopping_list_id}/entries/{obj.id}', 'shopping_list_url' : f'/lists/{obj.shopping_list_id}', 'product_url' : f'/products/{obj.product_id}', 'quantity' : obj.quantity, 'replacement' : obj.replacement}
 
     @staticmethod
-    def all():
+    def all(shopping_list_id):
         with Session(engine) as session:
             data = []
-            for e in session.scalars(select(orm.ShoppingEntry)).all():
+            for e in session.scalars(select(orm.ShoppingEntry).where(orm.ShoppingEntry.shopping_list_id == shopping_list_id)).all():
                 data.append(ShoppingEntries.object_to_dict(e))
             return RETURN.ok(data)
 
@@ -378,12 +443,18 @@ class ShoppingEntries:
 
     @staticmethod
     def create(shopping_list_id, input):
-        if 'product_id' not in input:
-            return RETURN.bad_request("Missing product_id")
-        if 'amount' not in input:
-            return RETURN.bad_request("Missing amount")
+        if 'product_url' not in input:
+            return RETURN.bad_request("Missing product_url")
+        if 'quantity' not in input:
+            return RETURN.bad_request("Missing quantity")
         with Session(engine) as session:
-            e = orm.ShoppingEntry(shopping_list_id=shopping_list_id, product_id=input['product_id'], amount=input['amount'])
+            p = Products.get_by_url(input['product_url'], session)
+            if p is None:
+                return RETURN.not_found("Product not found")
+            l = session.scalars(select(orm.ShoppingList).where(orm.ShoppingList.id == shopping_list_id)).one_or_none()
+            if l is None:
+                return RETURN.not_found("ShoppingList not found")
+            e = orm.ShoppingEntry(shopping_list_id=l.id, product_id=p.id, quantity=input['quantity'], replacement=input['replacement'] if 'replacement' in input else True)
             session.add(e)
             session.commit()
             return RETURN.created(ShoppingEntries.object_to_dict(e))
@@ -394,10 +465,10 @@ class ShoppingEntries:
             e = session.scalars(select(orm.ShoppingEntry).where(orm.ShoppingEntry.shopping_list_id == shopping_list_id).where(orm.ShoppingEntry.id == id)).one_or_none()
             if e is None:
                 return RETURN.not_found("Entry not found")
-            if 'product_id' in input:
-                e.product_id = input['product_id']
-            if 'amount' in input:
-                e.amount = input['amount']
+            if 'quantity' in input:
+                e.quantity = input['quantity']
+            if 'replacement' in input:
+                e.replacement = input['replacement']
             session.commit()
             return RETURN.ok(ShoppingEntries.object_to_dict(e))
 
@@ -410,3 +481,39 @@ class ShoppingEntries:
             session.delete(e)
             session.commit()
             return RETURN.no_content()
+
+    @staticmethod
+    def move(shopping_list_id, id, input):
+        if 'target_url' not in input:
+            return RETURN.bad_request("Missing target_url")
+
+        with Session(engine) as session:
+            src = session.scalars(select(orm.ShoppingEntry).where(orm.ShoppingEntry.shopping_list_id == shopping_list_id).where(orm.ShoppingEntry.id == id)).one_or_none()
+            if src is None:
+                return RETURN.not_found("Entry not found")
+
+            target_url = input['target_url']
+            elements = target_url.split('/')
+            if elements[1] == 'lists':
+                l = ShoppingLists.get_by_url(target_url, session)
+                if l is None:
+                    return RETURN.not_found("ShoppingList not found")
+
+                e = orm.ShoppingEntry(shopping_list_id=l.id, product_id=src.product_id, quantity=src.quantity, replacement=src.replacement)
+                session.add(e)
+                session.delete(src)
+                session.commit()
+                return RETURN.created(ShoppingEntries.object_to_dict(e))
+
+            if elements[1] == 'storages':
+                s = Storages.get_by_url(target_url, session)
+                if s is None:
+                    return RETURN.not_found("Storage not found")
+
+                e = orm.StorageEntry(storage_id=elements[1], product_id=src.product_id, quantity=src.quantity, replacement=True)
+                session.add(e)
+                session.delete(src)
+                session.commit()
+                return RETURN.created(StorageEntries.object_to_dict(e))
+
+            return RETURN.bad_request("No valid target_url")

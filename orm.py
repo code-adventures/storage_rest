@@ -50,8 +50,9 @@ class BrandedProduct(Base):
 
 class StorageEntry(Base):
     __tablename__ = "storage_entries"
-    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), primary_key=True)
-    storage_id: Mapped[int] = mapped_column(ForeignKey("storages.id"), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
+    storage_id: Mapped[int] = mapped_column(ForeignKey("storages.id"))
     product: Mapped["Product"] = relationship()
     storage: Mapped["Storage"] = relationship(back_populates="entries")
     quantity: Mapped[int] = mapped_column()
@@ -64,8 +65,9 @@ class Storage(Base):
 
 class ShoppingEntry(Base):
     __tablename__ = "shopping_entries"
-    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), primary_key=True)
-    shopping_list_id: Mapped[int] = mapped_column(ForeignKey("shopping_lists.id"), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
+    shopping_list_id: Mapped[int] = mapped_column(ForeignKey("shopping_lists.id"))
     shopping_list: Mapped["ShoppingList"] = relationship(back_populates="entries")
     quantity: Mapped[int] = mapped_column()
     replacement: Mapped[bool] = mapped_column()

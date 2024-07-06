@@ -32,7 +32,7 @@ app = Flask(__name__)
 # POST /storages/{id}/entries                   add entry
 # PUT /storages/{id}/entries/{entry_id}         update entry
 # DELETE /storages/{id}/entries/{entry_id}      delete entry
-# PUT /storages/{id}/entries/{entry_id}/move    move entry
+# POST /storages/{id}/entries/{entry_id}/move   move entry
 
 # GET /lists                                    all lists
 # GET /lists/{id}                               one list
@@ -44,7 +44,7 @@ app = Flask(__name__)
 # POST /lists/{id}/entries                      add entry
 # PUT /lists/{id}/entries/{entry_id}            update entry
 # DELETE /lists/{id}/entries/{entry_id}         delete entry
-# PUT /lists/{id}/entries/{entry_id}/move       move entry
+# POST /lists/{id}/entries/{entry_id}/move      move entry
 
 @app.route('/shops', methods=['GET', 'POST'])
 def get_shops():
@@ -127,9 +127,10 @@ def get_storage_entry(id, entry_id):
         return storage.ShoppingLists.update(id, entry_id, input)
     return storage.ShoppingLists.delete(id, entry_id)
 
-@app.route('/storages/<int:id>/entries/<int:entry_id>/move', methods=['PUT'])
+@app.route('/storages/<int:id>/entries/<int:entry_id>/move', methods=['POST'])
 def move_storage_entry(id, entry_id):
-    return "", 404
+    input = request.get_json()
+    return storage.StorageEntries.move(id, entry_id, input)
 
 @app.route('/lists', methods=['GET', 'POST'])
 def get_lists():
@@ -150,22 +151,24 @@ def get_list(id):
 @app.route('/lists/<int:id>/entries', methods=['GET', 'POST'])
 def get_list_entries(id):
     if request.method == 'GET':
-        return storage.ShoppingLists.all()
+        return storage.ShoppingEntries.all(id)
     input = request.get_json()
-    return storage.ShoppingLists.create(id, input)
+    return storage.ShoppingEntries.create(id, input)
 
 @app.route('/lists/<int:id>/entries/<int:entry_id>', methods=['GET','PUT','DELETE'])
 def get_list_entry(id, entry_id):
     if request.method == 'GET':
-        return storage.ShoppingLists.get(id, entry_id)
+        return storage.ShoppingEntries.get(id, entry_id)
     if request.method == 'PUT':
         input = request.get_json()
-        return storage.ShoppingLists.update(id, entry_id, input)
-    return storage.ShoppingLists.delete(id, entry_id)
+        return storage.ShoppingEntries.update(id, entry_id, input)
+    return storage.ShoppingEntries.delete(id, entry_id)
 
-@app.route('/lists/<int:id>/entries/<int:entry_id>/move', methods=['PUT'])
+@app.route('/lists/<int:id>/entries/<int:entry_id>/move', methods=['POST'])
 def move_list_entry(id, entry_id):
-    return "", 404
+    input = request.get_json()
+    return storage.ShoppingEntries.move(id, entry_id, input)
+
 
 if __name__ == '__main__':
     app.run()
