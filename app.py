@@ -46,71 +46,126 @@ app = Flask(__name__)
 # DELETE /lists/{id}/entries/{entry_id}         delete entry
 # PUT /lists/{id}/entries/{entry_id}/move       move entry
 
-@app.route('/shops', methods=['GET'])
+@app.route('/shops', methods=['GET', 'POST'])
 def get_shops():
-    return storage.Shops.all()
-
-@app.route('/shops/<int:id>', methods=['GET'])
-def get_shop(id):
-    return storage.Shops.get(id)
-
-@app.route('/shops', methods=['POST'])
-def create_shop():
+    if request.method == 'GET':
+        return storage.Shops.all()
     input = request.get_json()
     return storage.Shops.create(input)
+    
 
-@app.route('/shops/<int:id>', methods=['PUT'])
-def update_shop(id):
-    input = request.get_json()
-    return storage.Shops.update(id, input)
-
-@app.route('/shops/<int:id>', methods=['DELETE'])
-def delete_shop(id):
+@app.route('/shops/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+def get_shop(id):
+    if request.method == 'GET':
+        return storage.Shops.get(id)
+    if request.method == 'PUT':
+        input = request.get_json()
+        return storage.Shops.update(id, input)
     return storage.Shops.delete(id)
 
-@app.route('/products', methods=['GET'])
+@app.route('/products', methods=['GET', 'POST'])
 def get_products():
-    return storage.Products.all()
-
-@app.route('/products/<int:id>', methods=['GET'])
-def get_product(id):
-    return storage.Products.get(id)
-
-@app.route('/products', methods=['POST'])
-def create_product():
+    if request.method == 'GET':
+        return storage.Products.all()
     input = request.get_json()
     return storage.Products.create(input)
 
-@app.route('/products/<int:id>', methods=['PUT'])
-def update_product(id):
-    input = request.get_json()
-    return storage.Products.update(id, input)
-
-@app.route('/products/<int:id>', methods=['DELETE'])
-def delete_product(id):
+@app.route('/products/<int:id>', methods=['GET','PUT','DELETE'])
+def get_product(id):
+    if request.method == 'GET':
+        return storage.Products.get(id)
+    if request.method == 'PUT':
+        input = request.get_json()
+        return storage.Products.update(id, input)
     return storage.Products.delete(id)
 
-@app.route('/products/<int:id>/brands', methods=['GET'])
+@app.route('/products/<int:id>/brands', methods=['GET', 'POST'])
 def get_product_brands(id):
-    return storage.Brands.all(id)
-
-@app.route('/products/<int:id>/brands/<int:brand_id>', methods=['GET'])
-def get_product_brand(id, brand_id):
-    return storage.Brands.get(id, brand_id)
-
-@app.route('/products/<int:id>/brands', methods=['POST'])
-def create_product_brand(id):
+    if request.method == 'GET':
+        return storage.Brands.all(id)
     input = request.get_json()
     return storage.Brands.create(id, input)
 
-@app.route('/products/<int:id>/brands/<int:brand_id>', methods=['PUT'])
-def update_product_brand(id, brand_id):
-    input = request.get_json()
-    return storage.Brands.update(id, brand_id, input)
-
-@app.route('/products/<int:id>/brands/<int:brand_id>', methods=['DELETE'])
-def delete_product_brand(id, brand_id):
+@app.route('/products/<int:id>/brands/<int:brand_id>', methods=['GET','PUT','DELETE'])
+def get_product_brand(id, brand_id):
+    if request.method == 'GET':
+        return storage.Brands.get(id, brand_id)
+    if request.method == 'PUT':
+        input = request.get_json()
+        return storage.Brands.update(id, brand_id, input)
     return storage.Brands.delete(id, brand_id)
+
+@app.route('/storages', methods=['GET', 'POST'])
+def get_storages():
+    if request.method == 'GET':
+        return storage.Storages.all()
+    input = request.get_json()
+    return storage.Storages.create(input)
+
+@app.route('/storages/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+def get_storage(id):
+    if request.method == 'GET':
+        return storage.Storages.get(id)
+    if request.method == 'PUT':
+        input = request.get_json()
+        return storage.Storages.update(id, input)
+    return storage.Storages.delete(id)
+
+@app.route('/storages/<int:id>/entries', methods=['GET', 'POST'])
+def get_storage_entries(id):
+    if request.method == 'GET':
+        return storage.ShoppingLists.all()
+    input = request.get_json()
+    return storage.ShoppingLists.create(input)
+
+@app.route('/storages/<int:id>/entries/<int:entry_id>', methods=['GET','PUT','DELETE'])
+def get_storage_entry(id, entry_id):
+    if request.method == 'GET':
+        return storage.ShoppingLists.get(id, entry_id)
+    if request.method == 'PUT':
+        input = request.get_json()
+        return storage.ShoppingLists.update(id, entry_id, input)
+    return storage.ShoppingLists.delete(id, entry_id)
+
+@app.route('/storages/<int:id>/entries/<int:entry_id>/move', methods=['PUT'])
+def move_storage_entry(id, entry_id):
+    return "", 404
+
+@app.route('/lists', methods=['GET', 'POST'])
+def get_lists():
+    if request.method == 'GET':
+        return storage.ShoppingLists.all()
+    input = request.get_json()
+    return storage.ShoppingLists.create(input)
+
+@app.route('/lists/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+def get_list(id):
+    if request.method == 'GET':
+        return storage.ShoppingLists.get(id)
+    if request.method == 'PUT':
+        input = request.get_json()
+        return storage.ShoppingLists.update(id, input)
+    return storage.ShoppingLists.delete(id)
+
+@app.route('/lists/<int:id>/entries', methods=['GET', 'POST'])
+def get_list_entries(id):
+    if request.method == 'GET':
+        return storage.ShoppingLists.all()
+    input = request.get_json()
+    return storage.ShoppingLists.create(id, input)
+
+@app.route('/lists/<int:id>/entries/<int:entry_id>', methods=['GET','PUT','DELETE'])
+def get_list_entry(id, entry_id):
+    if request.method == 'GET':
+        return storage.ShoppingLists.get(id, entry_id)
+    if request.method == 'PUT':
+        input = request.get_json()
+        return storage.ShoppingLists.update(id, entry_id, input)
+    return storage.ShoppingLists.delete(id, entry_id)
+
+@app.route('/lists/<int:id>/entries/<int:entry_id>/move', methods=['PUT'])
+def move_list_entry(id, entry_id):
+    return "", 404
 
 if __name__ == '__main__':
     app.run()
