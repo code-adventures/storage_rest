@@ -46,82 +46,71 @@ app = Flask(__name__)
 # DELETE /lists/{id}/entries/{entry_id}         delete entry
 # PUT /lists/{id}/entries/{entry_id}/move       move entry
 
-def extract_return(ret):
-    data, code, code_msg = ret
-    if data:
-        return jsonify(data), code
-    return code_msg, code
-
 @app.route('/shops', methods=['GET'])
 def get_shops():
-    return extract_return(storage.Shops.all())
+    return storage.Shops.all()
 
 @app.route('/shops/<int:id>', methods=['GET'])
 def get_shop(id):
-    return extract_return(storage.Shops.get(id))
+    return storage.Shops.get(id)
 
 @app.route('/shops', methods=['POST'])
 def create_shop():
     input = request.get_json()
-    return extract_return(storage.Shops.create(input))
+    return storage.Shops.create(input)
 
 @app.route('/shops/<int:id>', methods=['PUT'])
 def update_shop(id):
     input = request.get_json()
-    return extract_return(storage.Shops.update(id, input))
+    return storage.Shops.update(id, input)
 
 @app.route('/shops/<int:id>', methods=['DELETE'])
 def delete_shop(id):
-    return extract_return(storage.Shops.delete(id))
+    return storage.Shops.delete(id)
 
 @app.route('/products', methods=['GET'])
 def get_products():
-    return extract_return(storage.Products.all())
+    return storage.Products.all()
 
 @app.route('/products/<int:id>', methods=['GET'])
 def get_product(id):
-    return extract_return(storage.Products.get(id))
+    return storage.Products.get(id)
 
 @app.route('/products', methods=['POST'])
 def create_product():
     input = request.get_json()
-    return extract_return(storage.Products.create(input))
+    return storage.Products.create(input)
 
 @app.route('/products/<int:id>', methods=['PUT'])
 def update_product(id):
     input = request.get_json()
-    return extract_return(storage.Products.update(id, input))
+    return storage.Products.update(id, input)
 
 @app.route('/products/<int:id>', methods=['DELETE'])
 def delete_product(id):
-    return extract_return(storage.Products.delete(id))
+    return storage.Products.delete(id)
 
 @app.route('/products/<int:id>/brands', methods=['GET'])
 def get_product_brands(id):
-    return extract_return(storage.Brands.all(id))
+    return storage.Brands.all(id)
 
 @app.route('/products/<int:id>/brands/<int:brand_id>', methods=['GET'])
 def get_product_brand(id, brand_id):
-    return extract_return(storage.Brands.get(id, brand_id))
+    return storage.Brands.get(id, brand_id)
 
 @app.route('/products/<int:id>/brands', methods=['POST'])
 def create_product_brand(id):
     input = request.get_json()
-    return extract_return(storage.Brands.create(id, input))
+    return storage.Brands.create(id, input)
 
 @app.route('/products/<int:id>/brands/<int:brand_id>', methods=['PUT'])
 def update_product_brand(id, brand_id):
     input = request.get_json()
-    return extract_return(storage.Brands.update(id, brand_id, input))
+    return storage.Brands.update(id, brand_id, input)
 
 @app.route('/products/<int:id>/brands/<int:brand_id>', methods=['DELETE'])
 def delete_product_brand(id, brand_id):
-    return extract_return(storage.Brands.delete(id, brand_id))
-
-
-@app.route('/')
-def hello_world():
-    return jsonify(storage.get_shopping_lists())
+    return storage.Brands.delete(id, brand_id)
 
 if __name__ == '__main__':
     app.run()

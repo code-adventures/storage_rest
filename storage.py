@@ -12,23 +12,23 @@ class RETURN:
 
     @staticmethod
     def ok(data):
-        return data, RETURN.OK, ""
+        return data, RETURN.OK
 
     @staticmethod
     def created(data):
-        return data, RETURN.CREATED, ""
+        return data, RETURN.CREATED
 
     @staticmethod
     def no_content():
-        return None, RETURN.NO_CONTENT, ""
+        return "", RETURN.NO_CONTENT
 
     @staticmethod
     def not_found(msg):
-        return None, RETURN.NOT_FOUND, msg
+        return msg, RETURN.NOT_FOUND
 
     @staticmethod
     def bad_request(msg):
-        return None, RETURN.BAD_REQUEST, msg
+        return msg, RETURN.BAD_REQUEST
 
 
 engine = create_engine('sqlite:///data.db', echo=True)
