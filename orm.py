@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from typing import List
+from typing import Optional
 
 class Base(DeclarativeBase):
     pass
@@ -30,6 +31,8 @@ class Shop(Base):
     __tablename__ = "shops"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
+    pic: Mapped[Optional[str]] = mapped_column(String(100))
+    mime: Mapped[Optional[str]] = mapped_column(String(100))
 
 class Product(Base):
     __tablename__ = "products"
@@ -46,6 +49,7 @@ class BrandedProduct(Base):
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id")) 
     product: Mapped["Product"] = relationship(back_populates="brands")
     shops: Mapped[List["Shop"]] = relationship(secondary=branded_product_shop_table)
+    pic: Mapped[Optional[str]] = mapped_column(String(100))
 
 
 class StorageEntry(Base):

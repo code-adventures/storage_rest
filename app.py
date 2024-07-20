@@ -1,15 +1,18 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import storage
 
 app = Flask(__name__)
 
 
-# urls
 # GET /shops                                    all shops
 # GET /shops/{id}                               one shop
 # POST /shops                                   create new shop
 # PUT /shops/{id}                               update shop
 # DELETE /shops/{id}                            delete shop
+# GET /shops/{id}/pic                           shop picture
+# POST /shops/{id}/pic                          add shop picture
+# PUT /shops/{id}/pic                           update shop picture
+# DELETE /shops/{id}/pic                        delete shop picture
 
 # GET /products                                 all products
 # GET /products/{id}                            one product
@@ -21,6 +24,10 @@ app = Flask(__name__)
 # POST /products/{id}/brands                    add brand
 # PUT /products/{id}/brands/{brand_id}          update brand
 # DELETE /products/{id}/brands/{brand_id}       delete brand
+# GET /products/{id}/brands/{brand_id}/pic      brand picture
+# POST /products/{id}/brands/{brand_id}/pic     add brand picture
+# PUT /products/{id}/brands/{brand_id}/pic      update brand picture
+# DELETE /products/{id}/brands/{brand_id}/pic   delete brand picture
 
 # GET /storages                                 all storages
 # GET /storages/{id}                            one storage
@@ -62,6 +69,19 @@ def get_shop(id):
         input = request.get_json()
         return storage.Shops.update(id, input)
     return storage.Shops.delete(id)
+
+@app.route('/shops/<int:id>/pic', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def get_shop_pic(id):
+    if request.method == 'GET':
+        data, ret = storage.Shops.get_pic(id)
+        if ret == 200:
+            return send_from_directory('static/pic', data[0], mimetype=data[1])
+        return data, ret
+    if request.method == 'POST':
+        return storage.Shops.add_pic(id, request.content_type, request.data)
+    if request.method == 'PUT':
+        return storage.Shops.update_pic(id, request.content_type, request.data)
+    return storage.Shops.delete_pic(id)
 
 @app.route('/products', methods=['GET', 'POST'])
 def get_products():
@@ -168,7 +188,6 @@ def get_list_entry(id, entry_id):
 def move_list_entry(id, entry_id):
     input = request.get_json()
     return storage.ShoppingEntries.move(id, entry_id, input)
-
 
 if __name__ == '__main__':
     app.run()

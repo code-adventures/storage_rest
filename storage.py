@@ -2,6 +2,9 @@ import orm
 from sqlalchemy import create_engine
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+import tempfile
+import os
+
 
 class RETURN:
     OK = 200
@@ -33,6 +36,13 @@ class RETURN:
 
 engine = create_engine('sqlite:///data.db', echo=True)
 orm.Base.metadata.create_all(engine)
+
+def store_pic(pic):
+    hdl, name = tempfile.mkstemp(dir='static/pic')
+    with os.fdopen(hdl, mode='wb') as f:
+        f.write(pic)
+    
+    return os.path.basename(name)
 
 class Shops:
     @staticmethod
@@ -83,6 +93,51 @@ class Shops:
             if s is None:
                 return RETURN.not_found("Shop not found")
             session.delete(s)
+            session.commit()
+            return RETURN.no_content()
+
+    @staticmethod
+    def get_pic(id):
+        with Session(engine) as session:
+            s = session.scalars(select(orm.Shop).where(orm.Shop.id == id)).one_or_none()
+            if s is None:
+                return RETURN.not_found("Shop not found")
+            if s.pic is None:
+                return RETURN.not_found("Shop has no picture")
+
+            return RETURN.ok((s.pic, s.mime))
+
+    @staticmethod
+    def add_pic(id, content_type, data):
+        with Session(engine) as session:
+            s = session.scalars(select(orm.Shop).where(orm.Shop.id == id)).one_or_none()
+            if s is None:
+                return RETURN.not_found("Shop not found")
+            s.pic = store_pic(data)
+            s.mime = content_type
+            session.commit()
+            return RETURN.no_content()
+
+    @staticmethod
+    def update_pic(id, content_type, data):
+        with Session(engine) as session:
+            s = session.scalars(select(orm.Shop).where(orm.Shop.id == id)).one_or_none()
+            if s is None:
+                return RETURN.not_found("Shop not found")
+            s.pic = store_pic(data)
+            s.mime = content_type
+            session.commit()
+            return RETURN.no_content()
+
+    @staticmethod
+    def delete_pic(id):
+        with Session(engine) as session:
+            s = session.scalars(select(orm.Shop).where(orm.Shop.id == id)).one_or_none()
+            if s is None:
+                return RETURN.not_found("Shop not found")
+            s.pic = None
+            s.mime = None
+            # TODO delete the file
             session.commit()
             return RETURN.no_content()
 
@@ -178,7 +233,8 @@ class Brands:
         if 'name' not in input:
             return RETURN.bad_request("Missing name")
         with Session(engine) as session:
-            b = orm.BrandedProduct(product_id=product_id, name=input['name'])
+            f = store_pic(input['pic']) if 'pic' in input else None
+            b = orm.BrandedProduct(product_id=product_id, name=input['name'], pic=f)
             session.add(b)
             session.commit()
             return RETURN.created(Brands.object_to_dict(b))
@@ -191,6 +247,8 @@ class Brands:
                 return RETURN.not_found("Brand not found")
             if 'name' in input:
                 b.name = input['name']
+            if 'pic' in input:
+                s.pic = store_pic(input['pic'])
             session.commit()
             return RETURN.ok(Brands.object_to_dict(b))
 
@@ -297,7 +355,7 @@ class StorageEntries:
             s = session.scalars(select(orm.Storage).where(orm.Storage.id == storage_id)).one_or_none()
             if s is None:
                 return RETURN.not_found("Storage not found")
-            e = orm.StorageEntry(storage_id=s.id, product_id=p.id], quantity=input['quantity'])
+            e = orm.StorageEntry(storage_id=s.id, product_id=p.id, quantity=input['quantity'])
             session.add(e)
             session.commit()
             return RETURN.created(StorageEntries.object_to_dict(e))
